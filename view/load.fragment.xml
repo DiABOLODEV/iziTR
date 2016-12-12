@@ -1,0 +1,18 @@
+<core:FragmentDefinition
+    	xmlns="sap.m"
+    	xmlns:core="sap.ui.core">
+    	<SelectDialog
+    		noDataText="Aucune sauvegarde"
+    		title="Charger une disquette"
+    		search="handleLoadSearch"
+    		confirm="handleLoadConfirm"
+    		items="{path: '/storage_slots'}" >
+    		<StandardListItem
+    			title="{name}"
+    			description=""
+    			icon=""
+    			iconDensityAware="false"
+    			iconInset="false"
+    			type="Active" />
+    	</SelectDialog>
+    </core:FragmentDefinition>

@@ -1,0 +1,148 @@
+<core:View height="100%" xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:tnt="sap.tnt" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:l="sap.ui.layout" xmlns:u="sap.ui.unified" xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
+	controllerName="Timereport.controller.Main">
+	<tnt:ToolPage id="toolPage">
+		<tnt:header>
+			<tnt:ToolHeader>
+				<Button iconFirst="true" type="Transparent" icon="sap-icon://arrow-left" press="onPressLeftNav" />
+				<Button text="{path : '/ui_disk'}" type="Transparent">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="NeverOverflow"/>
+					</layoutData>
+				</Button>
+				<ToolbarSpacer/>
+				<Button text="{path : '/ui_title'}" type="Transparent">
+					<layoutData>
+						<OverflowToolbarLayoutData priority="NeverOverflow"/>
+					</layoutData>
+				</Button>
+				<Button iconFirst="true" type="Transparent" icon="sap-icon://arrow-right" press="onPressRightNav" />
+			</tnt:ToolHeader>
+		</tnt:header>
+		<tnt:sideContent>
+			<tnt:SideNavigation expanded="true" itemSelect="onSelectNav_Dyn">
+				<tnt:NavigationList items="{path: '/nav_dyn'}" id="nav_dyn">
+					<tnt:NavigationListItem text="{title}" key="{key}" icon="{icon}" class="tr_completed" enabled="{enabled}"></tnt:NavigationListItem>
+				</tnt:NavigationList>
+				<tnt:fixedItem>
+					<tnt:NavigationList items="{path: '/nav_fix'}">
+						<tnt:NavigationListItem text="{title}" icon="{icon}" key="{key}"></tnt:NavigationListItem>
+					</tnt:NavigationList>
+				</tnt:fixedItem>
+			</tnt:SideNavigation>
+		</tnt:sideContent>
+		<tnt:mainContents>
+			<NavContainer id="pageContainer">
+				<pages>
+					<Page id="synthese" showHeader="false" enableScrolling="false">
+						<content>
+							<TileContainer id="synthese_tiles" tiles="{/syn_tiles}">
+								<StandardTile icon="sap-icon://{icon}" type="{type}" number="{number}" numberUnit="{numberUnit}" title="{title}" info="{info}" infoState="{infoState}" />
+							</TileContainer>
+
+						</content>
+					</Page>
+
+					<Page id="importExportJSON" showHeader="false" enableScrolling="false">
+						<content>
+							<Panel backgroundDesign="Translucent" class="sapUiContentPadding">
+								<TextArea growing="true" width="100%" id="importExportJSON_value" value="" />
+
+							</Panel>
+							<OverflowToolbar design="Solid" height="2rem">
+								<ToolbarSpacer/>
+								<core:Icon src="sap-icon://download" width="2rem" press="onPressImportJSON" />
+								<core:Icon src="sap-icon://upload" width="2rem" press="onPressExportJSON" />
+							</OverflowToolbar>
+
+
+
+
+						</content>
+
+					</Page>
+					<Page id="trkey" title="Time record">
+						<!-- Pour la liste ajout d'un encart secondaire pour afficher les détails et notes ! via split container-->
+						<SplitContainer id="splitTR" initialDetail="add" initialMaster="master">
+							<detailPages>
+								<Page id="add" title="Gestion">
+									<content>
+										<Panel backgroundDesign="Translucent" class="sapUiContentPadding">
+											<Label text="FFT" />
+											<Input id="tr_fft" value="" showSuggestion="true" showValueHelp="true" valueHelpRequest="onHelpRequestFft_items" suggestionItems="{/ffts}">
+											<suggestionItems>
+												<core:Item text="{fft}" />
+											</suggestionItems>
+											</Input>
+											<Label text="Temps" />
+											<Input id="tr_tps" value="" />
+											<Label text="Commentaire" />
+											<TextArea growing="true" width="100%" id="tr_com" value="" />
+											<Input id="tr_key" class="sapUiSmallMarginBottom" type="Text" enabled="false" editable="false" />
+										</Panel>
+										<OverflowToolbar design="Solid" height="2rem">
+											<ToolbarSpacer/>
+											<core:Icon src="sap-icon://add" width="2rem" press="onPressAddRec_item" />
+											<core:Icon src="sap-icon://delete" width="2rem" press="onPressDelRec_item" />
+										</OverflowToolbar>
+									</content>
+								</Page>
+								<Page id="detail" title="Details">
+									<content>
+										<OverflowToolbar design="Solid" height="2rem">
+											<Button text="Allez à la gestion" press="onPressGestionRec_item" type="Transparent" />
+										</OverflowToolbar>
+										<Panel backgroundDesign="Translucent" class="sapUiContentPadding">
+											<Toolbar height="3rem">
+												<Title text="FFT" />
+											</Toolbar>
+											<Label text="Nom" />
+											<Input editable="false" id="tr_details_fft_fft" />
+											<Label text="Intitulé" />
+											<Input editable="false" id="tr_details_fft_inti" />
+											<Label text="Code projet" />
+											<Input editable="false" id="tr_details_fft_cod" />
+											<Toolbar height="3rem">
+												<Title text="Commentaire" />
+											</Toolbar>
+											<TextArea change="onChangeDetailsCom" growing="true" width="100%" id="tr_details_com" value="" />
+
+										</Panel>
+									</content>
+								</Page>
+							</detailPages>
+							<masterPages>
+								<Page id="master" title="Enregistrements">
+									<content>
+										<List id="tr_list" class="sapUiContentPadding"></List>
+									</content>
+								</Page>
+							</masterPages>
+						</SplitContainer>
+					</Page>
+					<ScrollContainer id="export" horizontal="false" vertical="true" class="sapUiContentPadding" height="100%">
+						<Text text="Export excel"></Text>
+					</ScrollContainer>
+					<ScrollContainer id="ffts" horizontal="false" vertical="true" height="100%">
+						<Panel backgroundDesign="Translucent" class="sapUiContentPadding">
+							<Label text="FFT" />
+							<Input id="ffts_fft" value="" />
+							<Label text="Intitulé" />
+							<Input id="ffts_inti" value="" />
+							<Label text="Code projet" />
+							<Input id="ffts_cod" value="" />
+						</Panel>
+						<OverflowToolbar design="Solid" height="2rem">
+							<ToolbarSpacer/>
+							<core:Icon src="sap-icon://add" width="2rem" press="onPressAddFft_item" />
+							<core:Icon src="sap-icon://delete" width="2rem" press="onPressDelFft_item" />
+						</OverflowToolbar>
+						<List id="fft_list" items="{ path: '/fft_items' }" class="sapUiContentPadding">
+							<StandardListItem title="{fft}" info="{cod}" description="{inti}" />
+						</List>
+					</ScrollContainer>
+
+				</pages>
+			</NavContainer>
+		</tnt:mainContents>
+	</tnt:ToolPage>
+</core:View>

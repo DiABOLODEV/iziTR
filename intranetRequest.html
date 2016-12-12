@@ -1,0 +1,30 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>connexion intranet</title>
+
+</head>
+
+<body>
+    <script>
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', "http://intranet.codilog.fr/V2cia/V2Trombino.php?currentpage=63&previouspage=1", true);
+        xhr.setRequestHeader("Accept-Encoding", "gzip, deflate");
+        xhr.setRequestHeader("Authorization", "Basic dGdyOqsdqsd");
+        xhr.setRequestHeader("User-Agent", "runscope/0.1");
+        xhr.send();
+        xhr.onreadystatechange = processRequest;
+
+        function processRequest(e) {
+            document.write(xhr.statusText);
+            if (xhr.readyState == 4) {
+                var response = xhr.responseText;
+                document.write(response);
+
+            }
+        }
+    </script>
+</body>
+
+</html>
