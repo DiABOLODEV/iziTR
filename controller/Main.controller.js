@@ -26,6 +26,7 @@ sap.ui.define([
 	return Controller.extend("Timereport.controller.Main", {
 
 		DEBUG_MODE: false,
+		TIME_WORK: 7.7, // on doit travailler 7h7 dans la journée
 		SAVE_KEY: "iziTR",
 		PREFIXE_REC_KEY: "trkey",
 		DAY_NAMES: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
@@ -195,12 +196,14 @@ sap.ui.define([
 							});
 						}
 					});
-					if (total === 1) {
+					if (total >= 0.9 && total <= 1.1) {
 						icon = 'sap-icon://sys-enter';
-
+					}
+					else if (total >= 1) {
+						icon = 'sap-icon://add';
 					}
 					else if (total === 0) {
-						icon = 'sap-icon://sys-cancel';
+						icon = 'sap-icon://border';
 					}
 					else {
 						icon = 'sap-icon://goalseek';
@@ -384,6 +387,8 @@ sap.ui.define([
 			var com = this.getView().byId("tr_details_com").getValue();
 			var fft = this.getView().byId("tr_details_fft_fft").getValue();
 			var tps;
+			var start;
+			var stop;
 			var key_index = 0;
 			var fft_already_at_index = 0;
 			var instance = this;
@@ -394,6 +399,8 @@ sap.ui.define([
 					rec_item.tr.forEach(function(rec_tr, index2) {
 						instance._log("rec_tr.fft = " + fft);
 						if (rec_tr.fft === fft) {
+							start = rec_tr.start;
+							stop = rec_tr.stop;
 							tps = rec_tr.tps;
 							fft_already_at_index = index2;
 							key_index = index;
@@ -409,6 +416,8 @@ sap.ui.define([
 			this.model.setProperty("/rec_items/" + key_index + "/tr/" + fft_already_at_index, {
 				fft: fft,
 				com: com,
+				start: start,
+				stop: stop,
 				tps: tps
 			});
 
@@ -437,8 +446,35 @@ sap.ui.define([
 		onPressGestionRec_item: function(evt) {
 			this.byId("splitTR").to(this.createId("add"));
 		},
+		// Renseigne le temps actuel dans l'ajout d'un tr
+		onPressTrStart: function() {
+			var today = new Date();
+			var m = today.getMinutes();
+			var h = today.getHours();
+			this.getView().byId("tr_start").setValue(h + ':' + m);
+		},
+		onPressTrStop: function() {
+			var today = new Date();
+			var m = today.getMinutes();
+			var h = today.getHours();
+			this.getView().byId("tr_stop").setValue(h + ':' + m);
+		},
 		onPressAddRec_item: function() {
-			var tps = parseFloat(this.getView().byId("tr_tps").getValue());
+
+			var start = this.getView().byId("tr_start").getValue();
+			var stop = this.getView().byId("tr_stop").getValue();
+
+
+			var start_array = start.split(':');
+			var stop_array = stop.split(':');
+
+			// differenciel en minutes
+			var delta = ((parseInt(stop_array[0]) * 60) + parseInt(stop_array[1])) -
+				((parseInt(start_array[0]) * 60) + parseInt(start_array[1]));
+			var tps = delta / (this.TIME_WORK * 60);
+			tps.toFixed(2); // 2 chiffres significatifs
+
+			// tps en fonction de la journée travaillé de 7h44
 			var key = this.getView().byId("tr_key").getValue();
 			var key_index = 0;
 			var key_find = false;
@@ -475,10 +511,15 @@ sap.ui.define([
 			}
 			// controles !
 			var fft_find = false;
-			if (isNaN(tps)) {
-				this._message('e', "Rentré un temps valable (ex : 0.25)");
+			// maintenant on utilise heure start / stop pour calculer le temps
+			if (tps < 0) {
+				this._message('e', "Rentré un temps de début < temps de fin");
 				return;
 			}
+			// if (isNaN(tps)) {
+			// 	this._message('e', "Rentré un temps valable (ex : 0.25)");
+			// 	return;
+			// }
 			// fft déjà rentré pour cette clée ? on propose la modification
 			if (fft_already_here) {
 				total -= fft_already_tps;
@@ -494,6 +535,8 @@ sap.ui.define([
 							this.getModel().setProperty("/rec_items/" + key_index + "/tr/" + fft_already_at_index, {
 								fft: fft,
 								com: com,
+								start: start,
+								stop: stop,
 								tps: tps
 							});
 							sap.m.MessageToast.show("FFT " + fft + " modifiée !");
@@ -515,10 +558,10 @@ sap.ui.define([
 				dialog.open();
 			}
 			else {
-				if (total > 1) {
-					this._message('e', "Temps max : 1 (correspondant à une journée de travail)");
-					return;
-				}
+				// if (total > 1) {
+				// 	this._message('e', "Temps max : 1 (correspondant à une journée de travail)");
+				// 	return;
+				// }
 				// fft presente ?
 				this.data.fft_items.forEach(function(fft_item, index) {
 					if (fft_item.fft === fft) {
@@ -535,6 +578,8 @@ sap.ui.define([
 				this._onPressAddRec_item({
 					fft: fft,
 					com: com,
+					start: start,
+					stop: stop,
 					tps: tps
 				}, key_index);
 			}
@@ -739,28 +784,57 @@ sap.ui.define([
 			newData.fft_items = this.data.fft_items;
 			newData.rec_items = this.data.rec_items;
 
-			this.getView().byId("importExportJSON_value").setValue(JSON.stringify(newData));
+			var name = this.getView().byId("importExportJSON_value").getValue();
+			var content = "name=" + encodeURIComponent(name) + "&content=" + encodeURIComponent(JSON.stringify(newData));
+			content = content.replace(/%20/g, '+');
+			var instance = this;
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', "https://timereport-th92.c9users.io/logs/index.php", true);
+			xhr.setRequestHeader("Content-Type", "Application/x-www-form-urlencoded");
+			xhr.setRequestHeader("Content-length", content.length);
+			xhr.setRequestHeader("Accept-Encoding", "gzip, deflate");
+			xhr.setRequestHeader("User-Agent", "runscope/0.1");
+			xhr.setRequestHeader("Connection", "close");
+			xhr.send(content);
+			xhr.onreadystatechange = processRequest;
+
+			function processRequest(e) {
+
+				if (xhr.readyState == 4 && xhr.status == 200) {
+					instance._message('i', "Les données ont été exportées avec succès : ");
+				}
+				else {
+					instance._message('e', "Les données n'ont pas été exportées");
+				}
+			}
 
 			//window.open("data:text/json;charset=utf-8," + JSON.stringify(newData));
 		},
 		onPressImportJSON: function() {
-			var newData = this.getView().byId("importExportJSON_value").getValue();
-			if (/^[\],:{}\s]*$/.test(newData.replace(/\\["\\\/bfnrtu]/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
+			var name = this.getView().byId("importExportJSON_value").getValue();
+			var instance = this;
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET', "https://timereport-th92.c9users.io/logs/index.php" + "?name=" + name, true);
+			xhr.setRequestHeader("Accept-Encoding", "gzip, deflate");
+			xhr.setRequestHeader("User-Agent", "runscope/0.1");
+			xhr.send();
+			xhr.onreadystatechange = processRequest;
 
-				newData = JSON.parse(newData);
-				// On import les ffts et les records NO MORE !
-				this.data.rec_items = newData.rec_items;
-				this.data.fft_items = newData.fft_items;
-				this.__refreshSyn_tiles();
-				this._setNavDyn(this._buildNavDyn());
-				this.model.refresh(true);
-				this._message('i', "Les données ont été importées avec succès");
+			function processRequest(e) {
 
-			}
-			else {
-
-				this._message('e', "Les données ne sont pas au format JSON");
-
+				if (xhr.readyState == 4 && xhr.status == 200) {
+					var response = xhr.responseText;
+					var newData = JSON.parse(response);
+					instance.data.rec_items = newData.rec_items;
+					instance.data.fft_items = newData.fft_items;
+					instance.__refreshSyn_tiles();
+					instance._setNavDyn(instance._buildNavDyn());
+					instance.model.refresh(true);
+					instance._message('i', "Les données ont été importées avec succès");
+				}
+				else {
+					instance._message('e', "Les données n'ont pas été importées");
+				}
 			}
 
 		},
@@ -776,7 +850,8 @@ sap.ui.define([
 			this.getView().byId("tr_key").setValue(key);
 			// MàJ des input
 			this.getView().byId("tr_fft").setValue();
-			this.getView().byId("tr_tps").setValue();
+			this.getView().byId("tr_start").setValue();
+			this.getView().byId("tr_stop").setValue();
 			this.getView().byId("tr_com").setValue();
 			// rappatriement des items !
 			var key_index;
@@ -790,7 +865,7 @@ sap.ui.define([
 			list.bindItems("/rec_items/" + key_index + "/tr/", new sap.m.StandardListItem({
 				title: "{fft}",
 				description: "{com}",
-				info: "{tps}",
+				info: "{start} - {stop}",
 				press: function(evt) {
 					instance.onRecItemPress(evt);
 
@@ -857,11 +932,14 @@ sap.ui.define([
 			var icon;
 			this.data.nav_dyn.forEach(function(nav_dyn, index) {
 				if (nav_dyn.key === key) {
-					if (total === 1) {
+					if (total >= 0.9 && total <= 1.1) {
 						icon = 'sap-icon://sys-enter';
 					}
+					else if (total >= 1) {
+						icon = 'sap-icon://add';
+					}
 					else if (total === 0) {
-						icon = 'sap-icon://sys-cancel';
+						icon = 'sap-icon://border';
 					}
 					else {
 						icon = 'sap-icon://goalseek';

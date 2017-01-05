@@ -1,4 +1,4 @@
-<core:View height="100%" xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:tnt="sap.tnt" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:l="sap.ui.layout" xmlns:u="sap.ui.unified" xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
+<core:View height="100%" xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:tnt="sap.tnt" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:l="sap.ui.layout" xmlns:u="sap.ui.unified" xmlns:f="sap.ui.layout.form" xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
 	controllerName="Timereport.controller.Main">
 	<tnt:ToolPage id="toolPage">
 		<tnt:header>
@@ -45,7 +45,7 @@
 					<Page id="importExportJSON" showHeader="false" enableScrolling="false">
 						<content>
 							<Panel backgroundDesign="Translucent" class="sapUiContentPadding">
-								<TextArea growing="true" width="100%" id="importExportJSON_value" value="" />
+								<Input id="importExportJSON_value" value="" />
 
 							</Panel>
 							<OverflowToolbar design="Solid" height="2rem">
@@ -66,19 +66,47 @@
 							<detailPages>
 								<Page id="add" title="Gestion">
 									<content>
-										<Panel backgroundDesign="Translucent" class="sapUiContentPadding">
-											<Label text="FFT" />
-											<Input id="tr_fft" value="" showSuggestion="true" showValueHelp="true" valueHelpRequest="onHelpRequestFft_items" suggestionItems="{/ffts}">
-											<suggestionItems>
-												<core:Item text="{fft}" />
-											</suggestionItems>
-											</Input>
-											<Label text="Temps" />
-											<Input id="tr_tps" value="" />
-											<Label text="Commentaire" />
-											<TextArea growing="true" width="100%" id="tr_com" value="" />
-											<Input id="tr_key" class="sapUiSmallMarginBottom" type="Text" enabled="false" editable="false" />
-										</Panel>
+
+										<f:Form id="FormToolbar" editable="true" backgroundDesign="Translucent">
+											<f:layout>
+												<f:ResponsiveGridLayout />
+											</f:layout>
+											<f:formContainers>
+												<f:FormContainer>
+													<f:formElements>
+														<f:FormElement label="FFT">
+															<f:fields>
+																<Input id="tr_fft" value="" showSuggestion="true" showValueHelp="true" valueHelpRequest="onHelpRequestFft_items" suggestionItems="{/ffts}">
+																<suggestionItems>
+																	<core:Item text="{fft}" />
+																</suggestionItems>
+																</Input>
+															</f:fields>
+														</f:FormElement>
+														<f:FormElement label="Temps">
+															<f:fields>
+																<DateTimeInput id="tr_start" type="Time" placeholder="Commencé à hh:mm" class="sapUiSmallMarginBottom" />
+																<Button text="Start maintenant" press="onPressTrStart" type="Transparent" />
+															</f:fields>
+														</f:FormElement>
+														<f:FormElement label=" ">
+															<f:fields>
+																<DateTimeInput id="tr_stop" type="Time" placeholder="Terminé à hh:mm" class="sapUiSmallMarginBottom" />
+																<Button text="Stop maintenant" press="onPressTrStop" type="Transparent" />
+															</f:fields>
+														</f:FormElement>
+
+														<f:FormElement label="Commentaire">
+															<f:fields>
+																<TextArea growing="true" width="100%" id="tr_com" value="" />
+															</f:fields>
+														</f:FormElement>
+													</f:formElements>
+												</f:FormContainer>
+											</f:formContainers>
+										</f:Form>
+										<Input visible="false" id="tr_key" class="sapUiSmallMarginBottom" type="Text" enabled="false" editable="false" />
+
 										<OverflowToolbar design="Solid" height="2rem">
 											<ToolbarSpacer/>
 											<core:Icon src="sap-icon://add" width="2rem" press="onPressAddRec_item" />
